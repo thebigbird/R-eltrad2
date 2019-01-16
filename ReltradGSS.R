@@ -2,8 +2,8 @@
 library(car)
 library(descr) #Get the CrossTable Function! Weighted! crosstab
 #This is where the R dataset will live:
-urldata = url("https://github.com/thebigbird/davideagleorg/blob/master/public/files/gss7216.data")
-load(urldata)
+data = "gss7216.data"
+load(data)
 #Get rid of the black oversamples - these throw off the proportions
 gss = gss[gss$sample < 4| gss$sample==6| gss$sample>7,]
 gss = as.data.frame(gss)
