@@ -163,6 +163,6 @@ gss$reltrad[gss$xother==1]="Other"
 gss$reltrad[gss$xnonaff==1]="None"
 gss$year = as.factor(gss$year)
 gss = as.data.frame(gss)
-save(gss,file="gss7216_reltrad.data")
+#save(gss,file="gss7216_reltrad.data")
 #End of my poorly written R code! Sorry - I'll clean it up some day!
 
