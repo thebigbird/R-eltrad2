@@ -2,8 +2,9 @@
 library(car)
 library(descr) #Get the CrossTable Function! Weighted! crosstab
 #This is where the R dataset will live:
-data = "gss7216.data"
-load(data)
+load("gss7216.data")
+write.csv(gss,"gss7216.csv")
+
 #Get rid of the black oversamples - these throw off the proportions
 gss = gss[gss$sample < 4| gss$sample==6| gss$sample>7,]
 gss = as.data.frame(gss)
@@ -163,6 +164,6 @@ gss$reltrad[gss$xother==1]="Other"
 gss$reltrad[gss$xnonaff==1]="None"
 gss$year = as.factor(gss$year)
 gss = as.data.frame(gss)
-#save(gss,file="gss7216_reltrad.data")
+write.csv(gss,file="gss7216_reltrad.data")
 #End of my poorly written R code! Sorry - I'll clean it up some day!
 
