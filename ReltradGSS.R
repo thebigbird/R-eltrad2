@@ -1,9 +1,8 @@
-## @knitr ReltradCode
+#For easier recoding
 library(car)
-#library(tidyverse)
-library(descr) #Get the rocking CrossTable Function! Weighted! crosstab
+library(descr) #Get the CrossTable Function! Weighted! crosstab
 #This is where the R dataset will live:
-urldata = url("https://github.com/thebigbird/davideagleorg/raw/master/static/files/gss7216.data")
+urldata = url("https://github.com/thebigbird/davideagleorg/blob/master/public/files/gss7216.data")
 #
 load(urldata)
 #load(file="content/post/OrigData/gss7216.data")
