@@ -2,7 +2,7 @@
 library(car)
 library(descr) #Get the CrossTable Function! Weighted! crosstab
 #This is where the R dataset will live:
-gss=read.csv("https://raw.githubusercontent.com/thebigbird/R_Stata_Reltrad/master/gss7216.csv")
+gss=read.csv("https://raw.githubusercontent.com/thebigbird/R_Stata_Reltrad/master/gss7221_r1.dta")
 #Get rid of the black oversamples - these throw off the proportions
 gss = gss[gss$sample < 4| gss$sample==6| gss$sample>7,]
 gss = as.data.frame(gss)
