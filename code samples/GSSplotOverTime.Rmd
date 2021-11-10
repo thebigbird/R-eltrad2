@@ -1,0 +1,76 @@
+---
+title: "GSS Religious Affiliation Over Time"
+author: "David Eagle"
+date: "05/10/2021"
+output: html_document
+---
+
+Religious affliation has changed significantly in the United States since 1972. In this example, I plot the change in religious affiliation over time using data from the 1972--2018 (https://gss.norc.org/get-the-data)[General Social Survey].
+
+I have code on (https://github.com/thebigbird/reltrad)[Github] that recodes the GSS into the standard RELTRAD categories that are frequently used by sociologist of religion. This code shows how to use ggplot to create a plot of the trends over time.
+    
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = F)
+```
+
+```{r,fig.width = 10}
+#Create a Figure for GSS attendance over time
+#Plot the proportions over time
+library(srvyr)
+library(tidyverse)
+library(survey)
+library(ggthemes)
+#
+load("../Data/gss7221_r1_reltrad.RData") #See my github for the code to make these data
+
+ #See my github for the code to make these data
+gss = gss %>% 
+  mutate(year = as.numeric(as.character(year))) %>%
+  mutate(birthyr = year - age) %>%
+  mutate(age_cat = cut(birthyr, c(0,1928,1945,1965,1981,1997,2020)))
+
+levels(gss$age_cat) = c("Great","Silent","Boomer","GenX","Millenial","GenZ")
+
+#Calculate weighted proportions
+#Create survey object using svyr
+gss = filter(gss, year <2021)
+gss_svy <- gss %>% as_survey_design(1, weight = wtssall,
+                                    variables = c(year, reltrad, age_cat))
+
+#Now calculate proportions
+out = gss_svy %>% 
+  group_by(year, reltrad) %>%
+  summarize(prop = survey_mean(na.rm=T, proportion = T)) %>%
+  drop_na()
+
+#A nice set o' colors
+scFill = scale_color_manual(values = 
+                              c("#1B9E77", 
+                                "#DDC849",
+                                "#7570b3", 
+                                "#a6761d",
+                                "#e7298a",
+                                "#1f78b4",
+                                "#a9a9a9",
+                                "#cc99ff"))
+
+plotout = ggplot(data = out, aes(x=year, y=prop*100, color = reltrad, group = reltrad)) +
+  geom_ribbon(aes(ymin = prop - 1.96*prop_se, ymax = prop + 1.96*prop_se),
+                color = "white",alpha = .2, fill = "grey") +
+  geom_point() +
+  geom_line() +
+  ylab("Proportion of US Population Identifying As...") +
+  xlab("") +
+  labs(title = "Religious Affiliation in the United States",
+       subtitle = "General Social Survey",
+       caption = "David Eagle @davideaglephd / Data: https://gss.norc.org/",
+       color = "Religious Tradition")+
+  theme_minimal() + scFill +
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
+  ggtitle("Religious Affiliation in the United States 1972-2018")
+
+plotout
+  
+```
+
+Notice the green line--those who do not claim a religious affiliation--the proportion has increased from 0.05 in 1972 to 0.22 in 2018. Religious nones are now, along with Roman Catholics, the most common religious affiliation in the United States.

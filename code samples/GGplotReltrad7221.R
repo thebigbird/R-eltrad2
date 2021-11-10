@@ -5,7 +5,7 @@ library(tidyverse)
 library(survey)
 library(ggthemes)
 #
-load("../Data/gss.RData") #See my github for the code to make these data
+load("Data/gss7221_r1_reltrad.RData") #See my github for the code to make these data
 
 #Turn things into factors and ager categories
 gss = gss %>% 
@@ -76,7 +76,6 @@ plotout = ggplot(data = out, aes(x=year, y=prop, color = reltrad, group = reltra
   theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
   ggtitle("Religious Affiliation in the United States 1972-2021")
 
-plotout
-#ggsave("Output/reltradGSS.pdf", width = 12, height=5, dpi="retina")
+ggsave("Output/reltradGSS.pdf", width = 12, height=5, dpi="retina")
 
 

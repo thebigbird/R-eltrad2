@@ -1,11 +1,38 @@
 #For easier recoding
-library(car)
-library(descr) #Get the CrossTable Function! Weighted! crosstab
-#This is where the R dataset will live:
-gss=read.csv("https://raw.githubusercontent.com/thebigbird/R_Stata_Reltrad/master/gss7221_r1.dta")
 #Get rid of the black oversamples - these throw off the proportions
-gss = gss[gss$sample < 4| gss$sample==6| gss$sample>7,]
-gss = as.data.frame(gss)
+#This takes the 72-21 GSS and recodes it to create reltrad. 
+#Small changes made towards to then on Nov. 8, 2021.
+#PLEASE UPDATE YOUR CODE
+
+#CONTAINS LIFEWAY CODE CORRECTION
+#http://lifewayresearch.com/wp-content/uploads/2016/02/Stata_coding_reltrad_2_19_2016.pdf
+
+#Created by David Eagle www.davideagle.org
+#"code samples/GGplotReltrad7221.R" makes a picture of religious tradition over time
+
+#For easier recoding
+library(car)
+library(haven)
+library("tidyverse")
+#library(sjlabelled)
+library(summarytools)
+library(descr) #Get the CrossTable Function! Weighted! crosstab
+
+#Uncomment if needing to read in the data from scratch
+# # #This is where the R dataset will live:
+# gss=haven::read_dta("Data/gss7221_r1.dta") #449.1MB
+# gss = gss %>% 
+#   haven::zap_labels()
+# saveRDS(gss, file = "Data/gss7221_r1_nolabel.Rds") #33.6MB
+
+#Now start
+gss = readRDS("Data/gss7221_r1_nolabel.Rds")
+
+#Get rid of the Black oversample, add a sample variable to 2021
+gss$sample[gss$year==2021]=21
+gss = gss %>% 
+  filter(sample!=4,sample!=5,sample!=7)
+
 #recode into 5 major categories of religious affiliation
 # 1) Protestant [Ask DENOM]	1371	47.8
 # 2) Catholic
@@ -44,7 +71,6 @@ gss$xbp = gss$other
 gss$xbp = ifelse(gss$xbp %in% c(7, 14, 15, 21, 37, 38, 56, 78, 79, 85, 86, 
                                 87, 88, 98, 103, 104, 128, 133), 1, 0)
 
-
 #National baptists and AME, AMEZ
 gss$xbp = ifelse(gss$denom %in% c(12, 13, 20, 21), 1, gss$xbp)
 
@@ -55,10 +81,9 @@ gss$bldenom = 0
 gss$bldenom = gss$denom * gss$black
 gss$blother = gss$other==93 * gss$black
 #Call these black denominations
-table(gss$bldenom[gss$year==1974])
 
 gss$xbp = ifelse(gss$bldenom %in%
-                           c(23, 28, 18, 15, 10, 11, 14), 1, gss$xbp)
+                   c(23, 28, 18, 15, 10, 11, 14), 1, gss$xbp)
 #Black missionary baptists
 gss$xbp[gss$blother == 1] = 1
 
@@ -82,23 +107,6 @@ gss$wother = gss$other * gss$white
 gss$xev[gss$wother==93] = 1
 gss$xev[gss$xbp == 1] = 0
 gss=as.data.frame(gss)
-#Lifeway correction to reltrad
-gss$xtn = gss$relig
-gss$denom2 = gss$denom
-#70 = No denomination or non-denominations
-gss$denom2 = car::recode(gss$denom2, "70=1; else=0")
-gss$xtn = car::recode(gss$xtn, "11=1; else=0")
-gss$xtn[gss$denom2 == 1] = 2
-gss$xtn = car::recode(gss$xtn, "1=1; 2=0")
-#Only weekly or +weekly attenders
-gss$xtn[gss$attend < 4|gss$attend==3|gss$attend==0|is.na(gss$attend)] <- 0
-gss$xev[gss$xtn ==1] <- 1
-
-gss$inter <- gss$relig
-#Interdenominationals
-gss$inter <- car::recode(gss$inter, "13=1; else=0")
-gss$inter[gss$attend < 4|gss$attend==3|gss$attend==0|is.na(gss$attend)] <- 0
-gss$xev[gss$inter ==1] <- 1
 
 # Mainline Protestants
 gss$xml = NA
@@ -126,25 +134,52 @@ gss$xjew=ifelse(gss$xaffil=="jew",1,0)
 
 #Adherents of other religions.
 gss$xother = gss$other
+
 gss$xother = ifelse(gss$xother %in% 
                       c(11, 17, 29, 30, 33, 58, 59, 60, 61, 62, 64, 74, 75, 80, 
                         82, 95, 113, 114, 130, 136, 141, 145),1,0)
 #Adds others from main religious recoding
-gss$xother=ifelse(gss$xaffil=="other" & gss$xev==0,1,0)
+gss$xother=ifelse((gss$xaffil=="other" & gss$xev==0),1,gss$xother)
 
 #Unaffiliateds/Nonaffiliateds
 gss$xnonaff=0
 gss$xnonaff[gss$xaffil=="nonaf"]=1
 
-#The recodes non-denoms based on their attendance 
-#Non active Don't Know Protestants coded to nonaffil
-gss$xprotdk = ifelse(gss$denom == 70,1,0)
-gss$xprotdk[gss$xprotdk == 1 & gss$attend >= 4] = 0
-#Active Don't Know Protestants coded to evangelicals
-gss$xnonaff[gss$xprotdk]=1
-gss$xev[gss$xprotdk == 1 & gss$attend >= 4] = 1
+# #The recodes non-denoms based on their attendance 
+# #Non active Don't Know Protestants coded to nonaffil
+gss$xprotdk = ifelse(gss$denom == 70 ,1,0) #Assuming Christian here
+# #Protestants who attend monthly or less get turned to mainliners
+gss$xprotdk[gss$xprotdk == 1 & gss$attend < 4] = 0
+# #Active Don't Know Protestants coded to evangelicals who attend 
+gss$xev[gss$xprotdk == 1] = 1
+#
 
-#All these folks get coded evangelical
+#############################################
+#*This takes people who responded that they were Christian in the relig variable but didn't get asked the
+#followup and puts them into reltrad*
+#http://ryanburge.net/wp-content/uploads/2015/12/reltradarticle-1.pdf
+gss$xtn = gss$relig
+gss$denom2 = gss$denom
+
+#70 = No denomination or non-denominations
+gss$denom2 = car::recode(gss$denom2, "70=1; else=0")
+gss$xtn = car::recode(gss$xtn, "11=1; else=0")
+gss$xtn[gss$denom2 == 1] = 2
+gss$xtn = car::recode(gss$xtn, "1=1; 2=0")
+
+#Only weekly or +weekly attenders - this is a questionable assumption
+#Probably could be challenged.
+gss$xtn[gss$attend < 4|is.na(gss$attend)] <- 0
+gss$xev[gss$xtn ==1] <- 1
+#This takes people who responded that they were Interdenominational in the relig variable but didn't
+#get asked the followup and puts them into reltrad
+gss$inter <- gss$relig
+
+gss$inter <- car::recode(gss$inter, "13=1; else=0")
+gss$inter[gss$attend < 4|is.na(gss$attend)] <- 0
+gss$xev[gss$inter ==1] <- 1
+#############################################
+
 gss$reltrad = factor(NA, levels=c("Conservative Protestant",
                                   "Mainline Protestant",
                                   "Black Protestant",
@@ -162,5 +197,12 @@ gss$reltrad[gss$xother==1]="Other"
 gss$reltrad[gss$xnonaff==1]="None"
 gss$year = as.factor(gss$year)
 gss = as.data.frame(gss)
-save(gss,file="gss7216_reltrad.csv")
+#This codes the NA's as explicit
+#mutate(reltrad = forcats::fct_explicit_na(reltrad, na_level = "(Missing)"))
+table(gss$reltrad[gss$year==2000])
+#
+#saveRDS(gss,file="gss7218_reltrad.csv")
 #End of my poorly written R code! Sorry - I'll clean it up some day!
+
+save(gss,file="Data/gss7221_r1_reltrad.RData")
+
