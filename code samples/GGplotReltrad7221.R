@@ -12,7 +12,8 @@ gss = gss %>%
   mutate(year = as.numeric(as.character(year))) %>%
   mutate(birthyr = year - age) %>%
   mutate(age_cat = cut(birthyr, c(0,1928,1945,1965,1981,1997,2021))) %>% 
-  mutate(partyid = as.factor(partyid)) %>% 
+  mutate(partyid = as.factor(partyid),
+         trump = as.factor(ifelse(pres16==2,1,0))) %>% 
          mutate(year=as.factor(year))
 
 levels(gss$age_cat) = c("Great","Silent","Boomer","GenX","Millenial","GenZ")
@@ -21,10 +22,8 @@ levels(gss$age_cat) = c("Great","Silent","Boomer","GenX","Millenial","GenZ")
 #Create survey object using svyr
 gss_svy18 <- gss %>% filter(!is.na(wtssall)) %>% 
   as_survey_design(weight = wtssall,
-                   variables = c(year, reltrad, age_cat,partyid,race))
+                   variables = c(year, reltrad, age_cat,partyid,race,trump))
 
-gss = gss %>% mutate(partyid=as.factor(partyid),
-                     year=as.factor(year))
 
 gss_21 = svydesign(id = ~vpsu,
                    strata = ~vstrat,
