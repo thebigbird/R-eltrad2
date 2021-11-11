@@ -48,6 +48,8 @@ out2 = gss_svy21 %>%
 
 out = bind_rows(out,out2)
 
+
+out[out$year==2018,]
 #Plot the affiliation over time
 #A nice set o' colors
 scFill = scale_color_manual(values = 
@@ -74,6 +76,8 @@ plotout = ggplot(data = out, aes(x=year, y=prop, color = reltrad, group = reltra
   theme_minimal() + scFill +
   theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
   ggtitle("Religious Affiliation in the United States 1972-2021")
+
+plotout
 
 ggsave("Output/reltradGSS.pdf", width = 12, height=5, dpi="retina")
 

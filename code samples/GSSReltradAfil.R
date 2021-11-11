@@ -1,14 +1,5 @@
-#For easier recoding
-#Get rid of the black oversamples - these throw off the proportions
-#This takes the 72-21 GSS and recodes it to create reltrad. 
-#Small changes made towards to then on Nov. 8, 2021.
-#PLEASE UPDATE YOUR CODE
-
-#CONTAINS LIFEWAY CODE CORRECTION
-#http://lifewayresearch.com/wp-content/uploads/2016/02/Stata_coding_reltrad_2_19_2016.pdf
-
-#Created by David Eagle www.davideagle.org
-#"code samples/GGplotReltrad7221.R" makes a picture of religious tradition over time
+#####Coding the non-specific protestant, no denoms and interdenoms into a separate category
+#####I.E. not ever using attendance to disambiguate people
 
 #For easier recoding
 library(car)
@@ -49,11 +40,10 @@ gss = gss %>%
 # 13) Inter-/non-denominational
 # 98) Don't know
 # 99) No answer
-library(crosstable)
 
 gss$reltrad=NA
 gss$xaffil = car::recode(gss$relig, "1=1;2=4;3=5;4=9;5:10=6;11=1;12=6;13=1")
-
+table(gss$xaffil)
 gss$xaffil = as.factor(gss$xaffil)
 levels(gss$xaffil) = c("prot", "cath", "jew", "other", "nonaf")
 
@@ -62,22 +52,9 @@ levels(gss$xaffil) = c("prot", "cath", "jew", "other", "nonaf")
 # and Protestant nondenomination/no denomination.
 
 #####Black Protestants
-#####
-#In 2021, the race variable doesn't exist, it is in three variables
-#GSS hasn't released the imputed version or the racecen version yet
-#Make do with raceacs1 (white), raceacs2 (black), hispanic to construct race...not perfect
-#There is an undercount of Black people in the 2021 GSS
-gss = gss %>% mutate(race21 =  case_when(
-  (raceacs1==1 & hispanic==1 & raceacs2==0 & raceacs3==0&raceacs4==0&raceacs5==0) ~ 1,
-  (raceacs2==1&hispanic==1) ~ 2,
-  (raceacs1!=1&raceacs2!=1) ~3
-)) %>% 
-  mutate(race = ifelse(year==2021, race21, race))
-
-#Create a racial indicator using the GSS "race" variable in 1972-2018, constructed for 2021
+#Create a racial indicator
 gss$black = ifelse(gss$race == 2, 1, 0)
 gss$white = ifelse(gss$race == 1|gss$race == 3, 1, 0)
-
 #Take the "other" Protestant denominations and pull out the 
 #historical Black denominations, e.g. COGIC
 gss$xbp = gss$other
@@ -165,7 +142,7 @@ gss$xprotdk = ifelse(gss$denom == 70 ,1,0) #Assuming Christian here
 # #Protestants who attend monthly or less get turned to mainliners
 gss$xprotdk[gss$xprotdk == 1 & gss$attend < 4] = 0
 # #Active Don't Know Protestants coded to evangelicals who attend 
-gss$xev[gss$xprotdk == 1] = 1
+gss$protDK[gss$xprotdk == 1] = 1
 #
 
 #############################################
@@ -184,19 +161,20 @@ gss$xtn = car::recode(gss$xtn, "1=1; 2=0")
 #Only weekly or +weekly attenders - this is a questionable assumption
 #Probably could be challenged.
 gss$xtn[gss$attend < 4|is.na(gss$attend)] <- 0
-gss$xev[gss$xtn ==1] <- 1
+gss$protDK[gss$xtn ==1] <- 1
 #This takes people who responded that they were Interdenominational in the relig variable but didn't
 #get asked the followup and puts them into reltrad
 gss$inter <- gss$relig
 
 gss$inter <- car::recode(gss$inter, "13=1; else=0")
 gss$inter[gss$attend < 4|is.na(gss$attend)] <- 0
-gss$xev[gss$inter ==1] <- 1
+gss$protDK[gss$inter ==1] <- 1
 #############################################
 
 gss$reltrad = factor(NA, levels=c("Conservative Protestant",
                                   "Mainline Protestant",
                                   "Black Protestant",
+                                  "Protestant Don't Know",
                                   "Roman Catholic",
                                   "Jewish",
                                   "Other",
@@ -205,6 +183,7 @@ gss$reltrad = factor(NA, levels=c("Conservative Protestant",
 gss$reltrad[gss$xev==1]="Conservative Protestant"
 gss$reltrad[gss$xml==1]="Mainline Protestant"
 gss$reltrad[gss$xbp==1]="Black Protestant"
+gss$reltrad[gss$protDK==1]="Protestant Don't Know"
 gss$reltrad[gss$xcath==1]="Roman Catholic"
 gss$reltrad[gss$xjew==1]="Jewish"
 gss$reltrad[gss$xother==1]="Other"
