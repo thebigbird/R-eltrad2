@@ -1,33 +1,31 @@
 #For easier recoding
 #Get rid of the black oversamples - these throw off the proportions
-#This takes the 72-21 GSS and recodes it to create reltrad. 
-#Small changes made towards to then on Nov. 8, 2021.
+#This takes the 72-18 GSS and recodes it to create reltrad. 
+#Small changes made Nov. 8, 2021.
 #PLEASE UPDATE YOUR CODE
 
 #CONTAINS LIFEWAY CODE CORRECTION
 #http://lifewayresearch.com/wp-content/uploads/2016/02/Stata_coding_reltrad_2_19_2016.pdf
 
 #Created by David Eagle www.davideagle.org
-#"code samples/GGplotReltrad7221.R" makes a picture of religious tradition over time
+#"code samples/GGplotReltrad7218.R" makes a picture of religious tradition over time
 
 #For easier recoding
 library(car)
 library(haven)
 library("tidyverse")
-#library(sjlabelled)
 library(summarytools)
 library(descr) #Get the CrossTable Function! Weighted! crosstab
 
 #Uncomment if needing to read in the data from scratch
 # # #This is where the R dataset will live:
-# gss=haven::read_dta("Data/gss7221_r1.dta") #449.1MB
-# gss = gss %>% 
-#   haven::zap_labels()
-# saveRDS(gss, file = "Data/gss7221_r1_nolabel.Rds") #33.6MB
+ gss=haven::read_dta("Data/gss7221_r1.dta") #449.1MB
+ gss = gss %>% 
+   haven::zap_labels()
+#saveRDS(gss, file = "Data/gss7221_r1_nolabel.Rds") #to save uncomment
+#gss = readRDS("Data/gss7221_r1_nolabel.Rds")
 
 #Now start
-gss = readRDS("Data/gss7221_r1_nolabel.Rds")
-
 #Get rid of the Black oversample
 gss = gss %>% 
   filter(sample!=4,sample!=5,sample!=7) %>% 
