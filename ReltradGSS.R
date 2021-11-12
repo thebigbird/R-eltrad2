@@ -28,10 +28,10 @@ library(descr) #Get the CrossTable Function! Weighted! crosstab
 #Now start
 gss = readRDS("Data/gss7221_r1_nolabel.Rds")
 
-#Get rid of the Black oversample, add a sample variable to 2021
-gss$sample[gss$year==2021]=21
+#Get rid of the Black oversample
 gss = gss %>% 
-  filter(sample!=4,sample!=5,sample!=7)
+  filter(sample!=4,sample!=5,sample!=7) %>% 
+  filter(year<2021)
 
 #recode into 5 major categories of religious affiliation
 # 1) Protestant [Ask DENOM]	1371	47.8
@@ -49,7 +49,6 @@ gss = gss %>%
 # 13) Inter-/non-denominational
 # 98) Don't know
 # 99) No answer
-library(crosstable)
 
 gss$reltrad=NA
 gss$xaffil = car::recode(gss$relig, "1=1;2=4;3=5;4=9;5:10=6;11=1;12=6;13=1")
@@ -63,18 +62,7 @@ levels(gss$xaffil) = c("prot", "cath", "jew", "other", "nonaf")
 
 #####Black Protestants
 #####
-#In 2021, the race variable doesn't exist, it is in three variables
-#GSS hasn't released the imputed version or the racecen version yet
-#Make do with raceacs1 (white), raceacs2 (black), hispanic to construct race...not perfect
-#There is an undercount of Black people in the 2021 GSS
-gss = gss %>% mutate(race21 =  case_when(
-  (raceacs1==1 & hispanic==1 & raceacs2==0 & raceacs3==0&raceacs4==0&raceacs5==0) ~ 1,
-  (raceacs2==1&hispanic==1) ~ 2,
-  (raceacs1!=1&raceacs2!=1) ~3
-)) %>% 
-  mutate(race = ifelse(year==2021, race21, race))
-
-#Create a racial indicator using the GSS "race" variable in 1972-2018, constructed for 2021
+#Create a racial indicator using the GSS "race" variable in 1972-2018
 gss$black = ifelse(gss$race == 2, 1, 0)
 gss$white = ifelse(gss$race == 1|gss$race == 3, 1, 0)
 
@@ -213,7 +201,6 @@ gss$year = as.factor(gss$year)
 gss = as.data.frame(gss)
 #This codes the NA's as explicit
 #mutate(reltrad = forcats::fct_explicit_na(reltrad, na_level = "(Missing)"))
-table(gss$reltrad[gss$year==2000])
 #
 #saveRDS(gss,file="gss7218_reltrad.csv")
 #End of my poorly written R code! Sorry - I'll clean it up some day!

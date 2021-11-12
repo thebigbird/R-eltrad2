@@ -26,8 +26,9 @@ load("../Data/gss7221_r1_reltrad.RData") #See my github for the code to make the
  #See my github for the code to make these data
 gss = gss %>% 
   mutate(year = as.numeric(as.character(year))) %>%
+  filter(year<2021) %>% 
   mutate(birthyr = year - age) %>%
-  mutate(age_cat = cut(birthyr, c(0,1928,1945,1965,1981,1997,2020)))
+  mutate(age_cat = cut(birthyr, c(0,1928,1945,1965,1981,1997,2018)))
 
 levels(gss$age_cat) = c("Great","Silent","Boomer","GenX","Millenial","GenZ")
 

@@ -7,11 +7,12 @@ library(ggthemes)
 #
 load("Data/gss7221_r1_reltrad.RData") #See my github for the code to make these data
 
-#Turn things into factors and ager categories
+#Turn things into factors and age categories
 gss = gss %>% 
   mutate(year = as.numeric(as.character(year))) %>%
+  filter(year<2021) %>% 
   mutate(birthyr = year - age) %>%
-  mutate(age_cat = cut(birthyr, c(0,1928,1945,1965,1981,1997,2021))) %>% 
+  mutate(age_cat = cut(birthyr, c(0,1928,1945,1965,1981,1997,2018))) %>% 
   mutate(partyid = as.factor(partyid),
          trump = as.factor(ifelse(pres16==2,1,0))) %>% 
          mutate(year=as.factor(year))
@@ -24,32 +25,12 @@ gss_svy18 <- gss %>% filter(!is.na(wtssall)) %>%
   as_survey_design(weight = wtssall,
                    variables = c(year, reltrad, age_cat,partyid,race,trump))
 
-
-gss_21 = svydesign(id = ~vpsu,
-                   strata = ~vstrat,
-                   nest=T,
-                   weight = ~wtssps,
-                   variables = ~reltrad+year+partyid+race,
-                   data = filter(gss,year==2021))
-
-gss_svy21 = as_survey_design(gss_21)
-
 #Now calculate proportions
 out = gss_svy18 %>% 
   drop_na(year, reltrad) %>% 
   group_by(year, reltrad) %>%
   summarize(prop = survey_mean(na.rm=T, proportion = T))
 
-out2 = gss_svy21 %>% 
-  drop_na(year, reltrad) %>% 
-  select(year, reltrad) %>% 
-  group_by(year,reltrad) %>%
-  summarize(prop = survey_mean(na.rm=T, proportion = T))
-
-out = bind_rows(out,out2)
-
-
-out[out$year==2018,]
 #Plot the affiliation over time
 #A nice set o' colors
 scFill = scale_color_manual(values = 
@@ -75,7 +56,7 @@ plotout = ggplot(data = out, aes(x=year, y=prop, color = reltrad, group = reltra
        color = "Religious Tradition")+
   theme_minimal() + scFill +
   theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
-  ggtitle("Religious Affiliation in the United States 1972-2021")
+  ggtitle("Religious Affiliation in the United States 1972-2018")
 
 plotout
 

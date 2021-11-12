@@ -5,3 +5,5 @@
 Data/gss7221_r1_nolabel.Rds
 Data/gss7221_r1_reltrad.RData
 Data/gss7221_r1_reltrad.RData
+*.RData
+*.RData
