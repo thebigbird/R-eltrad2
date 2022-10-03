@@ -12,20 +12,13 @@
 
 #For easier recoding
 library(car)
-library(haven)
+library(gssr)
 library("tidyverse")
-library(summarytools)
 library(descr) #Get the CrossTable Function! Weighted! crosstab
+data(gss_all)
+gss=gss_all;rm(gss_all)
 
-#Uncomment if needing to read in the data from scratch
-# # #This is where the R dataset will live:
- gss=haven::read_dta("Data/gss7221_r1.dta") #449.1MB
- gss = gss %>% 
-   haven::zap_labels()
-#saveRDS(gss, file = "Data/gss7221_r1_nolabel.Rds") #to save uncomment
-#gss = readRDS("Data/gss7221_r1_nolabel.Rds")
-
-#Now start
+#Start
 #Get rid of the Black oversample
 gss = gss %>% 
   filter(sample!=4,sample!=5,sample!=7) %>% 
