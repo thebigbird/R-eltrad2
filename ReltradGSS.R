@@ -9,11 +9,16 @@ gss=gss_all;rm(gss_all)
 
 #Start
 #Get rid of the Black oversample
-source("")
+source("https://raw.githubusercontent.com/thebigbird/R_Stata_Reltrad/master/reltradFn.R")
 gss = gss %>% 
   filter(sample!=4,sample!=5,sample!=7) %>% 
   filter(year<2021)
 
-gss = reltrad(gss)
+#Create a reltrad variable
+gss = gss %>% mutate(reltrad = reltrad(gss))
 
-gss %>% summarize(mean(reltrad))
+#Here's a tibble of frequencies by year
+gss %>% group_by(year,reltrad) %>% 
+  summarize(n=n()) %>% 
+  mutate(freq = n/sum(n))
+  
