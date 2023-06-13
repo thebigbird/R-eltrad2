@@ -35,6 +35,12 @@ levels(gss$age_cat) = c("Great","Silent","Boomer","GenX","Millenial","GenZ")
 #Calculate weighted proportions
 #Create survey object using svyr
 gss = filter(gss, year <2021)
+
+
+gss = gss %>% mutate(black = ifelse(race==2,1,0),
+                       white = ifelse(race==1|race==3,1,0))
+gss$reltrad=gss$reltrad2
+gss = filter(gss, white==1)
 gss_svy <- gss %>% as_survey_design(1, weight = wtssall,
                                     variables = c(year, reltrad, age_cat))
 
