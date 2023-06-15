@@ -9,7 +9,8 @@ gss=gss_all;rm(gss_all)
 
 #Start
 source("https://raw.githubusercontent.com/thebigbird/R_Stata_Reltrad/master/reltradFn.R")
-source("reltrad2.R")
+source("https://raw.githubusercontent.com/thebigbird/R_Stata_Reltrad/master/reltrad2.R")
+
 
 #Get rid of the Black oversample
 gss = gss %>% 
