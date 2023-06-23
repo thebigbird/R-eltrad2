@@ -2,18 +2,20 @@
 #Get rid of the black oversamples - these throw off the proportions
 #This takes the 72-18 GSS and recodes it to create reltrad. 
 #Small changes made Nov. 8, 2021.
-#PLEASE UPDATE YOUR CODE
+#Code overhaul Jun 23, 2022. This code only does the classic reltrad with no corrections
+#We've now released RELTRAD2, which we believe is the most appropriate way to
+#handle non-denoms, no-denoms, and inter-denoms. The code for reltrad2 is provided in this repository
+
+#In this code, weekly+ attenders who are "don't know/no-denoms" are coded as evangelicals.
+#All other people in this group get coded as NA in reltrad.
 
 #CONTAINS LIFEWAY CODE CORRECTION
 #http://lifewayresearch.com/wp-content/uploads/2016/02/Stata_coding_reltrad_2_19_2016.pdf
 
-#UPDATING THIS CODE TO INCLUDE THE "RELTRAD2" CORRECTION FOR NON-AFFILIATES
-
 #Created by David Eagle www.davideagle.org
-#"code samples/GGplotReltrad7218.R" makes a picture of religious tradition over time
+#With help from his trusty sidekick Joshua Gaghan
 
-#Reltrad2 Function
-#This is the version recommended by Gaghan and Eagle
+#Reltrad Function
 
 reltrad2 = function(gss){
   library(tidyverse)
@@ -34,7 +36,6 @@ reltrad2 = function(gss){
   # 98) Don't know
   # 99) No answer
   
-  #Start by creating an empty variable
   gss$reltrad=NA
   
   #Takes the GSS variable "RELIG" and recodes into 5 major categories
@@ -149,9 +150,37 @@ reltrad2 = function(gss){
   # #Non active Don't Know Protestants coded to nonaffil
   # Rest are either 1 = Protestant or 11 = Christian
   
+  
   # DENOM==70 is "No denomination or non-denominational church", gotta check Protestant==1 to get to denom
-  gss$xprotdk = ifelse(gss$denom == 70,1,0)
-  gss$protND = gss$xprotdk
+  # relig==11 is the just Christian folks
+  
+  gss <- gss %>% mutate(xprotdk = case_when(denom==70 ~ 1, #non-denom
+                                            relig==13 ~ 1, #interdenom,
+                                            (denom==60|is.na(denom))&(relig==11) ~ 1, #lifeway correction
+                                            TRUE ~ 0)
+                        )
+  
+  
+  ##Now apply the reltrad2 rules to deal with the xprotdk category
+  #Black people who are "inter/no denoms are coded as Black Protestants
+  gss <- gss %>% mutate(xbp = case_when(black==1 & xprotdk ==1 ~ 1,
+                                        TRUE ~ xbp))
+  
+  #Non-black people who attend less than annually or never are mainline Protestants
+  gss <- gss %>% mutate(xml = case_when(attend <= 1 & black==0 & xprotdk ==1 ~ 1,
+                                        TRUE ~ xml))
+  
+  #Non-black people who attend once or more a year are evangelicals
+  
+  gss <- gss %>% mutate(xev = case_when((attend >=2|is.na(attend)) & black==0 & xprotdk ==1 ~ 1,
+                                        TRUE ~ xev))
+  
+    # #Protestants who attend monthly or less get turned to NA (equated to zero, but this category isn't used
+    #in the final construction)
+    gss = gss %>% mutate(xprotdk = case_when(xprotdk==1 & black==1  ~ 0,
+                                             xprotdk==1 & black==0 & attend <=1 ~ 0,
+                                             xprotdk==1 & black==0 & (attend >=2|is.na(attend)) ~ 0,
+                                             TRUE ~ xprotdk))
   
   #
   #############################################
@@ -162,27 +191,7 @@ reltrad2 = function(gss){
   
   #Where people said they are Christian, but didn't answer the denomination question or gave "other" to
   #the denomination question. Really just prot don't know
-  gss = gss %>%  mutate(xtn = ifelse(((denom==60|is.na(denom))&(relig==11)),1,0)) #16 people
-  #Only weekly or +weekly attenders - this is a questionable assumption
-  #Probably could be challenged.
-  gss$protND[gss$xtn==1]=1
 
-  #This takes people who responded that they were Interdenominational in the relig variable
-  gss$inter <- gss$relig
-  gss$inter <- car::recode(gss$inter, "13=1; else=0")
-
-  #Recode these as don't know
-  gss$protND[gss$inter==1]=1
-
-#Now apply the reltrad2 rules to deal with the protND category
-#Black people who are "inter/no denoms are coded as Black Protestants
-gss$xbp[gss$black==1 & gss$protND ==1] = 1
-
-#Non-black people who attend less than annually or never are mainline Protestants
-gss$xml[gss$attend <= 1 & gss$black == 0] = 1
-
-#Non-black people who attend once or more a year are evangelicals
-gss$xev[(gss$attend >=2|is.na(gss$attend)) & gss$black == 0] = 1
 
   #############################################
   gss$reltrad = factor(NA, levels=c("Conservative Protestant",
@@ -193,7 +202,6 @@ gss$xev[(gss$attend >=2|is.na(gss$attend)) & gss$black == 0] = 1
                                     "Other",
                                     "None"))
   
-  
   gss$reltrad[gss$xev==1]="Conservative Protestant"
   gss$reltrad[gss$xml==1]="Mainline Protestant"
   gss$reltrad[gss$xbp==1]="Black Protestant"
@@ -201,10 +209,8 @@ gss$xev[(gss$attend >=2|is.na(gss$attend)) & gss$black == 0] = 1
   gss$reltrad[gss$xjew==1]="Jewish"
   gss$reltrad[gss$xother==1]="Other"
   gss$reltrad[gss$xnonaff==1]="None"
+  gss$reltrad[gss$xprotdk==1]= NA_character_
   
   return(gss$reltrad)
-  
+
 }
-
-
-
