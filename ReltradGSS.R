@@ -6,8 +6,6 @@ library("tidyverse")
 library(srvyr)
 data(gss_all)
 gss=gss_all;rm(gss_all)
-getwd()
-
 #Start by getting functions
 #
 source("reltrad2Fn.R")
@@ -15,8 +13,9 @@ source("reltradFn.R")
 
 #Get rid of the Black oversample
 gss = gss %>% 
-  filter(sample!=4,sample!=5,sample!=7) %>% 
-  filter(year<2021)
+  select(year,age,wtssps,sample,race,denom,relig,attend,other, wtssall) %>% 
+  filter(sample!=4,sample!=5,sample!=7,year<2021) %>% 
+  mutate(wtssall = ifelse(is.na(wtssall), wtssps, wtssall))
 
 #Cut by generation
 gss = gss %>% 
@@ -27,6 +26,7 @@ gss = gss %>%
          reltrad2 = reltrad2(gss))
 
 levels(gss$age_cat) = c("Great","Silent","Boomer","GenX","Millenial","GenZ")
+
 
 #Calculate weighted proportions
 #Create survey object using svyr
@@ -74,15 +74,16 @@ plotout1 = ggplot(data = outa,
   geom_line(data=outb,aes(x=year,y=prop, color = reltrad2, group=reltrad2)) +
   ylab("Proportion of US Population Identifying As...") +
   xlab("") +
-  labs(title = "Religious Affiliation in the United States",
-       subtitle = "General Social Survey",
+  labs(title = "Religious Affiliation in the United States, a tale of two Reltrads",
+       subtitle = "Reltrad2 (Dark), Reltrad O.G. (Light lines)",
        caption = "David Eagle / Data: https://gss.norc.org/",
        color = "Religious Tradition")+
   theme_minimal() + scFill +
-  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
-  ggtitle("Religious Affiliation in the United States 1972-2018 - Reltrad2 (Dark), Reltrad O.G. (Light lines).")
-#ggsave(plotout,"Output/reltradGSS.png", width = 12, height=5, dpi="retina")
+  theme(axis.text.x = element_text(angle = 70, hjust = 1)) 
 
+#ggsave(plotout,"Output/reltradGSS.png", width = 12, height=5, dpi="retina")
+ plotout1
+ #Light lines are the old reltrad. Our correction is in dark.
 
 plotout2 = ggplot(data = out2, 
                   aes(x=year, 
@@ -97,15 +98,13 @@ plotout2 = ggplot(data = out2,
   geom_line() +
   ylab("Proportion of US Population Identifying As...") +
   xlab("") +
-  labs(title = "Religious Affiliation in the United States",
-       subtitle = "General Social Survey",
+  labs(title = "Religious Affiliation in the United States: Reltrad2 Version",
+       subtitle = "1972-2018, General Social Survey",
        caption = "David Eagle / Data: https://gss.norc.org/",
        color = "Religious Tradition")+
   theme_minimal() + scFill +
-  theme(axis.text.x = element_text(angle = 70, hjust = 1)) +
-  ggtitle("Religious Affiliation in the United States 1972-2018 - Reltrad2")
+  theme(axis.text.x = element_text(angle = 70, hjust = 1))
 
 #ggsave(plotout,"Output/reltradGSS.png", width = 12, height=5, dpi="retina")
 
-
-plotout1 #Light lines are the old reltrad. Our correction is in dark.
+plotout2 

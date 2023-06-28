@@ -19,6 +19,8 @@
 
 reltrad = function(gss){
   library(tidyverse)
+  
+  
   #recode into 5 major categories of religious affiliation
   # 1) Protestant [Ask DENOM]	1371	47.8
   # 2) Catholic
@@ -50,7 +52,7 @@ reltrad = function(gss){
     relig==13 ~ "prot"
   )) %>% 
     mutate(xaffil = as.factor(xaffil))
-  
+  table(gss$relig)
   # The following code breaks down religious groups by evangelicals, black
   # Protestants, mainline, liberal and conservative nontraditional,
   # and Protestant nondenomination/no denomination.
