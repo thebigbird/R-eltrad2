@@ -161,26 +161,26 @@ reltrad2 = function(gss){
                         )
   
   
-  ##Now apply the reltrad2 rules to deal with the xprotdk category
-  #Black people who are "inter/no denoms are coded as Black Protestants
-  gss <- gss %>% mutate(xbp = case_when(black==1 & xprotdk ==1 ~ 1,
-                                        TRUE ~ xbp))
-  
-  #Non-black people who attend less than annually or never are mainline Protestants
-  gss <- gss %>% mutate(xml = case_when(attend <= 1 & black==0 & xprotdk ==1 ~ 1,
-                                        TRUE ~ xml))
-  
-  #Non-black people who attend once or more a year are evangelicals
-  
-  gss <- gss %>% mutate(xev = case_when((attend >=2|is.na(attend)) & black==0 & xprotdk ==1 ~ 1,
-                                        TRUE ~ xev))
-  
-    # #Protestants who attend monthly or less get turned to NA (equated to zero, but this category isn't used
-    #in the final construction)
-    gss = gss %>% mutate(xprotdk = case_when(xprotdk==1 & black==1  ~ 0,
-                                             xprotdk==1 & black==0 & attend <=1 ~ 0,
-                                             xprotdk==1 & black==0 & (attend >=2|is.na(attend)) ~ 0,
-                                             TRUE ~ xprotdk))
+## Now apply the reltrad2 rules to deal with the xprotdk category
+## Note that people who don't share their race are coded as "not-Black"
+# Black people who are "inter/no denoms are coded as Black Protestants
+gss <- gss %>% mutate(xbp = case_when(black==1 & xprotdk ==1 ~ 1,
+                                      TRUE ~ xbp))
+
+#Non-black people who never attend are mainline Protestants
+gss <- gss %>% mutate(xml = case_when(attend <= 0 & (black==0 | is.na(black)) & xprotdk ==1 ~ 1,
+                                      TRUE ~ xml))
+
+#Non-black people who attend once or more a year are evangelicals
+gss <- gss %>% mutate(xev = case_when((attend >=1|is.na(attend)) & (black==0 | is.na(black)) & xprotdk ==1 ~ 1,
+                                      TRUE ~ xev))
+
+# #Protestants who attend monthly or less get turned to NA (equated to zero, but this category isn't used
+#in the final construction)
+gss = gss %>% mutate(xprotdk = case_when(xprotdk==1 & black==1  ~ 0,
+                                         xprotdk==1 & (black==0 | is.na(black)) & attend <=0 ~ 0,
+                                         xprotdk==1 & (black==0 | is.na(black)) & (attend >=1|is.na(attend)) ~ 0,
+                                         TRUE ~ xprotdk))
   
   #
   #############################################
