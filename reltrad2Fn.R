@@ -1,13 +1,12 @@
 #For easier recoding
 #Get rid of the black oversamples - these throw off the proportions
-#This takes the 72-18 GSS and recodes it to create reltrad. 
+#This takes the combined GSS file and recodes it to create reltrad. 
 #Small changes made Nov. 8, 2021.
 #Code overhaul Jun 23, 2022. This code only does the classic reltrad with no corrections
-#We've now released RELTRAD2, which we believe is the most appropriate way to
-#handle non-denoms, no-denoms, and inter-denoms. The code for reltrad2 is provided in this repository
-
-#In this code, weekly+ attenders who are "don't know/no-denoms" are coded as evangelicals.
-#All other people in this group get coded as NA in reltrad.
+#Code re-done in March, 2024 to reflect RELTRAD2
+#RELTRAD2, we believe is the most appropriate way to
+#handle non-denoms, no-denoms, and inter-denoms. The original reltrad
+#code is in the reltradFn.R function
 
 #CONTAINS LIFEWAY CODE CORRECTION
 #http://lifewayresearch.com/wp-content/uploads/2016/02/Stata_coding_reltrad_2_19_2016.pdf
